@@ -10,7 +10,6 @@ public class Client {
     private BufferedWriter saida;
     private Controller controller;
 
-    // Removemos a variável ultimaMensagemRecebida, pois não será mais necessária
     // private String ultimaMensagemRecebida = "";
 
     public Client(Socket socket, Controller controller) {

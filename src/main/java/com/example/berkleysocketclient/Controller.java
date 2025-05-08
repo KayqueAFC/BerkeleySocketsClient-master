@@ -51,7 +51,7 @@ public class Controller implements Initializable {
                 scrollMensagens.setVvalue(1.0)
         );
 
-        // Envio de mensagem ao pressionar ENTER (impede inserção de nova linha)
+        // Envio de mensagem ao pressionar ENTER
         campoMensagem.setOnKeyPressed(event -> {
             if (event.getCode() == KeyCode.ENTER) {
                 event.consume();
