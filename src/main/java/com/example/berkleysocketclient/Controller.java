@@ -1,23 +1,22 @@
 package com.example.berkleysocketclient;
 
 import javafx.application.Platform;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
-import javafx.scene.control.TextField;
+import javafx.scene.control.TextArea;
+import javafx.scene.input.KeyCode;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 
+import java.io.IOException;
 import java.net.Socket;
 import java.net.URL;
 import java.util.ResourceBundle;
@@ -27,7 +26,7 @@ public class Controller implements Initializable {
     @FXML
     private Button botaoEnviar;
     @FXML
-    private TextField campoMensagem;
+    private TextArea campoMensagem;
     @FXML
     private VBox vboxMensagens;
     @FXML
@@ -37,72 +36,93 @@ public class Controller implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
-        try {
-            client = new Client(new Socket("localhost", 1234));
-            System.out.println("Conectado ao servidor");
-        } catch (Exception e) {
-            e.printStackTrace();
-            System.out.println("Erro ao criar o cliente");
-        }
+        configurarInterface();
 
-        vboxMensagens.heightProperty().addListener(new ChangeListener<Number>() {
-            @Override
-            public void changed(ObservableValue<? extends Number> observableValue, Number valorAntigo, Number valorNovo) {
-                scrollMensagens.setVvalue((Double) valorNovo);
+        try {
+            client = new Client(new Socket("localhost", 1234), this);
+            client.iniciarEscutaMensagens();
+        } catch (IOException e) {
+            mostrarErro("Falha ao conectar ao servidor: " + e.getMessage());
+        }
+    }
+
+    private void configurarInterface() {
+        // Auto-scroll: sempre rola para o final quando a altura muda
+        vboxMensagens.heightProperty().addListener((obs, oldVal, newVal) -> {
+            scrollMensagens.setVvalue(1.0);
+        });
+
+        // Envio da mensagem ao pressionar ENTER
+        campoMensagem.setOnKeyPressed(event -> {
+            if (event.getCode() == KeyCode.ENTER) {
+                event.consume();  // Impede que o ENTER insira nova linha
+                enviarMensagem();
             }
         });
 
-        client.receberMensagensServidor(vboxMensagens);
+        // Envio da mensagem ao clicar no botão
+        botaoEnviar.setOnAction(event -> enviarMensagem());
+    }
 
-        botaoEnviar.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent evento) {
-                String mensagemEnviar = campoMensagem.getText();
-                if (!mensagemEnviar.isEmpty()) {
-                    HBox hBox = new HBox();
-                    hBox.setAlignment(Pos.CENTER_RIGHT);
-                    hBox.setPadding(new Insets(5, 5, 5, 10));
+    private void enviarMensagem() {
+        String mensagem = campoMensagem.getText().trim();
+        if (mensagem.isEmpty()) {
+            return;
+        }
+        // Exibe imediatamente a mensagem enviada pelo usuário (lado direito)
+        adicionarMensagem(mensagem, Pos.CENTER_RIGHT, "bubble-user");
 
-                    Text texto = new Text(mensagemEnviar);
-                    TextFlow textFlow = new TextFlow(texto);
+        // Envia para o servidor
+        if (client != null) {
+            client.enviarMensagem(mensagem);
+        }
 
-                    textFlow.setStyle("-fx-color: rgb(239, 242, 255);" +
-                            "-fx-background-color: rgb(15, 125, 252);" +
-                            "-fx-background-radius: 20px"
-                    );
-                    textFlow.setPadding(new Insets(5, 10, 5, 10));
-                    texto.setFill(Color.color(0.934, 0.945, 0.996));
+        campoMensagem.clear();
+        campoMensagem.setPrefHeight(40);
+    }
 
-                    hBox.getChildren().add(textFlow);
-                    vboxMensagens.getChildren().add(hBox);
+    public void adicionarMensagem(String mensagem, Pos posicao, String estilo) {
+        Platform.runLater(() -> {
+            // Container para o conjunto de rótulo e balão
+            HBox container = new HBox();
+            container.setPadding(new Insets(5, 10, 15, 10));
+            container.setAlignment(posicao);
 
-                    client.enviarMensagemServidor(mensagemEnviar);
-                    campoMensagem.clear();
-                }
+            // Rótulo para o remetente
+            Label lblSender = new Label();
+            if (posicao == Pos.CENTER_RIGHT) {
+                lblSender.setText("Você");
+                lblSender.getStyleClass().addAll("sender-label", "sender-client");
+            } else {
+                lblSender.setText("Suporte");
+                lblSender.getStyleClass().addAll("sender-label", "sender-server");
             }
+
+            // Cria o texto e o TextFlow que conterá a mensagem
+            Text texto = new Text(mensagem);
+            texto.setStyle("-fx-font-family: 'Segoe UI'; -fx-font-size: 14px;");
+            TextFlow textFlow = new TextFlow(texto);
+            textFlow.getStyleClass().add(estilo);
+            // Vincula largura máxima do balão à largura do scroll (75% do total)
+            textFlow.maxWidthProperty().bind(scrollMensagens.widthProperty().multiply(0.75));
+            textFlow.setPadding(new Insets(8));
+
+            // Junta o rótulo e a mensagem em uma VBox
+            VBox messageBox = new VBox(2, lblSender, textFlow);
+            messageBox.setAlignment(posicao);
+
+            container.getChildren().add(messageBox);
+            vboxMensagens.getChildren().add(container);
         });
     }
 
-    public static void adicionarLabel(String mensagemServidor, VBox vBox) {
-        HBox hBox = new HBox();
-        hBox.setAlignment(Pos.CENTER_LEFT);
-        hBox.setPadding(new Insets(5, 10, 5, 5));
-
-        Text texto = new Text(mensagemServidor);
-        TextFlow textFlow = new TextFlow(texto);
-
-        textFlow.setStyle(
-                "-fx-background-color: rgb(233, 233, 235);" +
-                        "-fx-background-radius: 20px"
-        );
-        textFlow.setPadding(new Insets(5, 10, 5, 10));
-        hBox.getChildren().add(textFlow);
-
-        Platform.runLater(new Runnable() {
-            @Override
-            public void run() {
-                vBox.getChildren().add(hBox);
-            }
+    public void mostrarErro(String mensagem) {
+        Platform.runLater(() -> {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Erro no Cliente");
+            alert.setHeaderText(null);
+            alert.setContentText(mensagem);
+            alert.showAndWait();
         });
     }
 }

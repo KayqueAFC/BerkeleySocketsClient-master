@@ -1,0 +1,122 @@
+/* Estilos gerais */
+.root {
+    -fx-background-color: linear-gradient(to bottom, #ffe6e6, #ffcccc); /* Fundo com tons quentes */
+    -fx-padding: 15px;
+}
+
+/* Cabeçalho */
+.titulo-chat {
+    -fx-font-family: "Segoe UI Semibold";
+    -fx-font-size: 24px;
+    -fx-text-fill: #c0392b; /* Vermelho intenso */
+    -fx-padding: 0 0 15px 0;
+}
+
+/* Área de mensagens */
+.scroll-pane {
+    -fx-background: transparent;
+    -fx-background-color: transparent;
+    -fx-pannable: true;
+}
+
+.mensagens-container {
+    -fx-padding: 15px;
+    -fx-spacing: 10px;
+    -fx-background-color: rgba(255, 215, 215, 0.85); /* Rosa claro */
+    -fx-background-radius: 15px;
+}
+
+/* Balões de mensagem */
+.bubble-user {
+    -fx-background-color: #ff4d4d; /* Vermelho vibrante */
+    -fx-background-radius: 15px 15px 0 15px;
+    -fx-padding: 10px 15px;
+    -fx-text-fill: white;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 5, 0, 0, 2);
+    -fx-wrap-text: true;
+    -fx-max-width: 75%; /* Garante responsividade */
+}
+
+.bubble-support {
+    -fx-background-color: #ff99c2; /* Rosa quente */
+    -fx-background-radius: 15px 15px 15px 0;
+    -fx-padding: 10px 15px;
+    -fx-text-fill: black;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 3, 0, 0, 1);
+    -fx-border-width: 0;
+    -fx-wrap-text: true;
+    -fx-max-width: 75%; /* Ajuste para largura dinâmica */
+}
+
+/* Rótulos */
+.sender-label {
+    -fx-font-family: "Segoe UI";
+    -fx-font-size: 11px;
+    -fx-padding: 0 0 3px 5px;
+}
+
+.sender-client {
+    -fx-text-fill: #f5b7b1; /* Vermelho suave */
+}
+
+.sender-server {
+    -fx-text-fill: #f1948a; /* Rosa quente */
+}
+
+/* Área de input */
+.input-container {
+    -fx-background-color: white;
+    -fx-background-radius: 20px;
+    -fx-padding: 10px;
+    -fx-spacing: 10px;
+}
+
+/* Campo de texto estilo WhatsApp */
+.campo-texto {
+    -fx-background-radius: 20px;
+    -fx-border-radius: 20px;
+    -fx-border-color: #f1948a; /* Rosa quente */
+    -fx-border-width: 1px;
+    -fx-padding: 8px 15px;
+    -fx-font-family: "Segoe UI";
+    -fx-font-size: 14px;
+    -fx-wrap-text: true;
+    -fx-pref-row-count: 1;
+    -fx-max-height: 100px;
+    -fx-background-insets: 0;
+    -fx-border-insets: 0;
+}
+
+.campo-texto .scroll-pane {
+    -fx-hbar-policy: never;
+    -fx-vbar-policy: as-needed;
+}
+
+.campo-texto .content {
+    -fx-background-color: transparent;
+    -fx-background-radius: 20px;
+    -fx-padding: 5px;
+}
+
+.campo-texto:focused {
+    -fx-border-color: #ff4d4d; /* Vermelho vibrante */
+}
+
+/* Botão enviar */
+.botao-enviar {
+    -fx-background-color: #ff4d4d; /* Vermelho forte */
+    -fx-text-fill: white;
+    -fx-background-radius: 20px;
+    -fx-font-weight: bold;
+    -fx-font-family: "Segoe UI";
+    -fx-cursor: hand;
+    -fx-font-size: 14px;
+    -fx-padding: 8px 15px;
+    -fx-min-width: 80px;
+    -fx-pref-width: 80px;
+    -fx-max-width: 80px;
+}
+
+.botao-enviar:hover {
+    -fx-background-color: #cc0000; /* Vermelho mais escuro */
+}

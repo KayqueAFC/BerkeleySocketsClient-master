@@ -1,74 +1,78 @@
 package com.example.berkleysocketclient;
 
-import javafx.scene.layout.VBox;
-
+import javafx.geometry.Pos;
 import java.io.*;
 import java.net.Socket;
 
 public class Client {
-
     private Socket socket;
-    private BufferedReader bufferedReader;
-    private BufferedWriter bufferedWriter;
+    private BufferedReader entrada;
+    private BufferedWriter saida;
+    private Controller controller;
 
-    public Client(Socket socket) {
-        try{
-            this.socket = socket;
-            this.bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            this.bufferedWriter = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
-        } catch (IOException e) {
-            e.printStackTrace();
-            System.out.println("Erro ao criar o cliente");
-            fecharTudo(socket, bufferedReader, bufferedWriter);
-        }
-    }
+    // Variável para guardar a última mensagem recebida para evitar duplicação
+    private String ultimaMensagemRecebida = "";
 
-
-
-    public void enviarMensagemServidor(String mensagemServidor) {
+    public Client(Socket socket, Controller controller) {
         try {
-            bufferedWriter.write(mensagemServidor);
-            bufferedWriter.newLine();
-            bufferedWriter.flush();
+            this.socket = socket;
+            this.entrada = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            this.saida = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+            this.controller = controller;
         } catch (IOException e) {
-            e.printStackTrace();
-            System.out.println("Erro ao enviar mensagem para o servidor");
-            fecharTudo(socket, bufferedReader, bufferedWriter);
+            fecharTudo();
         }
     }
 
-    public void receberMensagensServidor(VBox vboxMensagem) {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                while(socket.isConnected()) {
-                    try {
-                        String mensagemServidor = bufferedReader.readLine();
-                        Controller.adicionarLabel(mensagemServidor, vboxMensagem);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                        System.out.println("Erro ao receber mensagem do servidor");
-                        fecharTudo(socket, bufferedReader, bufferedWriter);
+    public void iniciarEscutaMensagens() {
+        new Thread(() -> {
+            while (socket.isConnected()) {
+                try {
+                    String mensagem = entrada.readLine();
+                    if (mensagem == null)
                         break;
+
+                    System.out.println("[DEBUG] Servidor enviou: " + mensagem);
+
+                    // Se a mensagem for igual à última recebida, ignore-a para evitar duplicação
+                    if (mensagem.equals(ultimaMensagemRecebida)) {
+                        continue;
                     }
+                    ultimaMensagemRecebida = mensagem;
+
+                    // Exibe a mensagem recebida (lado esquerdo – balão do suporte)
+                    controller.adicionarMensagem(mensagem, Pos.CENTER_LEFT, "bubble-support");
+
+                } catch (IOException e) {
+                    controller.mostrarErro("Conexão com servidor perdida");
+                    fecharTudo();
+                    break;
                 }
             }
         }).start();
     }
 
-    public void fecharTudo(Socket socket, BufferedReader bufferedReader, BufferedWriter bufferedWriter) {
+    public void enviarMensagem(String mensagem) {
         try {
-            if(bufferedReader != null) {
-                bufferedReader.close();
-            }
-            if(bufferedWriter != null) {
-                bufferedWriter.close();
-            }
-            if(socket != null) {
-                socket.close();
-            }
+            System.out.println("[DEBUG] Enviando para o servidor: " + mensagem);
+            saida.write(mensagem);
+            saida.newLine();
+            saida.flush();
         } catch (IOException e) {
-            System.out.println("Erro ao fechar o servidor");
+            controller.mostrarErro("Erro ao enviar mensagem");
+            fecharTudo();
+        }
+    }
+
+    public void fecharTudo() {
+        try {
+            if (entrada != null)
+                entrada.close();
+            if (saida != null)
+                saida.close();
+            if (socket != null)
+                socket.close();
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }
