@@ -37,7 +37,6 @@ public class Controller implements Initializable {
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
         configurarInterface();
-
         try {
             client = new Client(new Socket("localhost", 1234), this);
             client.iniciarEscutaMensagens();
@@ -47,15 +46,15 @@ public class Controller implements Initializable {
     }
 
     private void configurarInterface() {
-        // Auto-scroll: sempre rola para o final quando a altura muda
-        vboxMensagens.heightProperty().addListener((obs, oldVal, newVal) -> {
-            scrollMensagens.setVvalue(1.0);
-        });
+        // Auto-scroll sempre que o VBox de mensagens alterar sua altura
+        vboxMensagens.heightProperty().addListener((obs, oldVal, newVal) ->
+                scrollMensagens.setVvalue(1.0)
+        );
 
-        // Envio da mensagem ao pressionar ENTER
+        // Envio de mensagem ao pressionar ENTER (impede inserção de nova linha)
         campoMensagem.setOnKeyPressed(event -> {
             if (event.getCode() == KeyCode.ENTER) {
-                event.consume();  // Impede que o ENTER insira nova linha
+                event.consume();
                 enviarMensagem();
             }
         });
@@ -69,10 +68,10 @@ public class Controller implements Initializable {
         if (mensagem.isEmpty()) {
             return;
         }
-        // Exibe imediatamente a mensagem enviada pelo usuário (lado direito)
-        adicionarMensagem(mensagem, Pos.CENTER_RIGHT, "bubble-user");
+        // Exibe a mensagem enviada pelo usuário (lado direito)
+        adicionarMensagem(mensagem, Pos.CENTER_RIGHT, "bubble-right");
 
-        // Envia para o servidor
+        // Envia a mensagem para o servidor (caso o client esteja conectado)
         if (client != null) {
             client.enviarMensagem(mensagem);
         }
@@ -83,12 +82,12 @@ public class Controller implements Initializable {
 
     public void adicionarMensagem(String mensagem, Pos posicao, String estilo) {
         Platform.runLater(() -> {
-            // Container para o conjunto de rótulo e balão
+            // Container que agrupa a mensagem e o rótulo
             HBox container = new HBox();
             container.setPadding(new Insets(5, 10, 15, 10));
             container.setAlignment(posicao);
 
-            // Rótulo para o remetente
+            // Rótulo com o nome do remetente
             Label lblSender = new Label();
             if (posicao == Pos.CENTER_RIGHT) {
                 lblSender.setText("Você");
@@ -98,16 +97,16 @@ public class Controller implements Initializable {
                 lblSender.getStyleClass().addAll("sender-label", "sender-server");
             }
 
-            // Cria o texto e o TextFlow que conterá a mensagem
+            // Cria o conteúdo da mensagem
             Text texto = new Text(mensagem);
             texto.setStyle("-fx-font-family: 'Segoe UI'; -fx-font-size: 14px;");
             TextFlow textFlow = new TextFlow(texto);
+            // Adiciona a classe CSS (sem estilo inline)
             textFlow.getStyleClass().add(estilo);
-            // Vincula largura máxima do balão à largura do scroll (75% do total)
             textFlow.maxWidthProperty().bind(scrollMensagens.widthProperty().multiply(0.75));
             textFlow.setPadding(new Insets(8));
 
-            // Junta o rótulo e a mensagem em uma VBox
+            // Agrupa o remetente e a mensagem
             VBox messageBox = new VBox(2, lblSender, textFlow);
             messageBox.setAlignment(posicao);
 

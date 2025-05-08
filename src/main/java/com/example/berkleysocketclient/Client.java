@@ -41,7 +41,7 @@ public class Client {
                     ultimaMensagemRecebida = mensagem;
 
                     // Exibe a mensagem recebida (lado esquerdo – balão do suporte)
-                    controller.adicionarMensagem(mensagem, Pos.CENTER_LEFT, "bubble-support");
+                    controller.adicionarMensagem(mensagem, Pos.CENTER_LEFT, "bubble-left");
 
                 } catch (IOException e) {
                     controller.mostrarErro("Conexão com servidor perdida");
