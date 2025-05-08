@@ -10,8 +10,8 @@ public class Client {
     private BufferedWriter saida;
     private Controller controller;
 
-    // Variável para guardar a última mensagem recebida para evitar duplicação
-    private String ultimaMensagemRecebida = "";
+    // Removemos a variável ultimaMensagemRecebida, pois não será mais necessária
+    // private String ultimaMensagemRecebida = "";
 
     public Client(Socket socket, Controller controller) {
         try {
@@ -33,12 +33,6 @@ public class Client {
                         break;
 
                     System.out.println("[DEBUG] Servidor enviou: " + mensagem);
-
-                    // Se a mensagem for igual à última recebida, ignore-a para evitar duplicação
-                    if (mensagem.equals(ultimaMensagemRecebida)) {
-                        continue;
-                    }
-                    ultimaMensagemRecebida = mensagem;
 
                     // Exibe a mensagem recebida (lado esquerdo – balão do suporte)
                     controller.adicionarMensagem(mensagem, Pos.CENTER_LEFT, "bubble-left");
